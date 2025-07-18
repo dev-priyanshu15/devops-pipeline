@@ -1,22 +1,33 @@
 {
   "name": "devops-pipeline-app",
-  "version": "1.0.0",
-  "description": "Sample app for DevOps pipeline demonstration",
+  "version": "2.0.0",
+  "description": "Advanced DevOps pipeline with CI/CD, security scanning, and monitoring",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage --watchAll=false",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/ --fix",
+    "security:audit": "npm audit --audit-level high",
+    "docker:build": "docker build -t devops-app:latest .",
+    "docker:scan": "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image devops-app:latest",
+    "k6:test": "k6 run tests/performance/load-test.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "helmet": "^7.1.0",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "compression": "^1.7.4"
   },
   "devDependencies": {
     "jest": "^29.7.0",
     "nodemon": "^3.0.1",
-    "supertest": "^6.3.3"
+    "supertest": "^6.3.3",
+    "eslint": "^8.48.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

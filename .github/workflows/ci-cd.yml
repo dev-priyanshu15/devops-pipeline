@@ -1,0 +1,93 @@
+name: Ì∫Ä DevOps Pipeline - CI/CD
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Ì∑™ Testing Phase
+  test:
+    name: Ì∑™ Test & Quality
+    runs-on: ubuntu-latest
+    steps:
+    - name: Ì≥• Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Ìø¢ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Ì≥¶ Install dependencies
+      run: npm ci
+    
+    - name: Ì∑™ Run unit tests
+      run: npm test -- --coverage --watchAll=false
+    
+    - name: Ì¥ê Security audit
+      run: npm audit --audit-level high
+
+  # Ì¥í Security Scanning
+  security:
+    name: Ì¥í Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - name: Ì≥• Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Ì∞≥ Build Docker image for scanning
+      run: docker build -t scan-image .
+    
+    - name: Ìª°Ô∏è Trivy vulnerability scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'scan-image'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+  # Ì∞≥ Build & Push
+  build:
+    name: Ì∞≥ Build & Push
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - name: Ì≥• Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Ì¥ê Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: ÌøóÔ∏è Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+  # Ì∫Ä Deploy to Staging
+  deploy-staging:
+    name: Ì∫Ä Deploy Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    steps:
+    - name: Ì≥• Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Ì∫Ä Deploy to staging
+      run: echo "Ì∫Ä Deploying to staging environment"
