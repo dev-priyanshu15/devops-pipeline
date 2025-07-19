@@ -10,8 +10,8 @@ module.exports = {
     sourceType: 'module'
   },
   rules: {
-    'no-console': 'warn',
-    'no-unused-vars': 'error',
+    'no-console': 'off',
+    'no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }], // Allow vars starting with _
     'prefer-const': 'error',
     'no-var': 'error'
   }
